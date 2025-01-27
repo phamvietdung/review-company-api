@@ -11,3 +11,4 @@ mydb = mysql.connector.connect(
   database = os.getenv("MYSQL_DATABASE")
 )
 
+token = os.getenv("TOKEN")

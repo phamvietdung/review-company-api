@@ -8,11 +8,41 @@ dbcontext : MySQLCursorAbstract = None
 def initConnection():
     return mydb.cursor()
 
-def getReviews(page : int, page_size : int):
+def getTotalReviews(search_text: str):
 
     dbcontext = initConnection()
 
-    dbcontext.execute(f"SELECT Id, CompanyName, Salary, Position, `Year`, Other FROM Reviews LIMIT {page_size} OFFSET {page * page_size}")
+    query = f"SELECT COUNT(*) FROM Reviews"
+
+    if search_text != None and search_text != "":
+        query = f"{query} WHERE CompanyName LIKE '%{search_text}%'"
+
+    dbcontext.execute(query)
+
+    data = dbcontext.fetchall()
+
+    return data[0][0]
+
+def getReviews(search_text: str ,page : int, page_size : int, isFilter : bool = False):
+
+    dbcontext = initConnection()
+
+    query = f"SELECT Id, CompanyName, Salary, Position, `Year`, Other, IsHidden, IsReviewed, JsonRawData FROM Reviews"
+
+    total_query = f"SELECT COUNT(*) FROM Reviews"
+
+    if search_text != None and search_text != "":
+        query = f"{query} WHERE CompanyName LIKE '%{search_text}%'"
+        total_query = f"{total_query} WHERE CompanyName LIKE '%{search_text}%'"
+
+    if isFilter:
+        query = f"{query} WHERE IsHidden = 0"
+        total_query = f"{total_query} WHERE IsHidden = 0"
+
+    query = f"{query} LIMIT {page_size} OFFSET {page * page_size};"
+
+    dbcontext.execute(query)
+
     data = dbcontext.fetchall()
 
     result = []
@@ -25,12 +55,41 @@ def getReviews(page : int, page_size : int):
             "Salary" : x[2],
             "Position" : x[3],
             "Year" : x[4],
-            "Other" : x[5]
+            "Other" : x[5],
+            "IsHidden" : x[6],
+            "IsReviewed" : x[7],
+            "JsonRawData" : x[8]
         })
     
-    return result
-    
+    dbcontext.execute(total_query)
+
+    total_data = dbcontext.fetchall()
+
+    total = total_data[0][0]
+
+    return {
+        "items" : result,
+        "total" : total
+    }
+
+def UpdateReviewIsHidden(review_id: int, is_hidden: bool):
+    dbcontext = initConnection()
+
+    query = f"UPDATE Reviews SET IsHidden = {is_hidden} WHERE Id = {review_id};"
+
+    dbcontext.execute(query)
+
+    mydb.commit()
+
+def UpdateReviewIsReviewed(review_id: int, is_reviewed: bool):
+    dbcontext = initConnection()
+
+    query = f"UPDATE Reviews SET IsReviewed = {is_reviewed} WHERE Id = {review_id};"
+
+    dbcontext.execute(query)
+
+    mydb.commit()
 
 #print()
 #print(json.dumps(getReviews()))
-getReviews(1, 20)
+#getReviews(1, 20)

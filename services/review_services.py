@@ -31,15 +31,26 @@ def getReviews(search_text: str ,page : int, page_size : int, isFilter : bool = 
 
     total_query = f"SELECT COUNT(*) FROM Reviews"
 
+    isNeedWhere : bool = False
+
+    tailQuery = ""
+
     if search_text != None and search_text != "":
-        query = f"{query} WHERE CompanyName LIKE '%{search_text}%'"
-        total_query = f"{total_query} WHERE CompanyName LIKE '%{search_text}%'"
+        isNeedWhere = True
+        tailQuery = f"CompanyName LIKE '%{search_text}%'"
 
     if isFilter:
-        query = f"{query} WHERE IsHidden = 0"
-        total_query = f"{total_query} WHERE IsHidden = 0"
+        isNeedWhere = True
+        if tailQuery != "":
+            tailQuery = f"{tailQuery} AND IsHidden = 0"
+
+    if isNeedWhere:
+        query = f"{query} WHERE {tailQuery}"
+        total_query = f"{total_query} WHERE {tailQuery}"
 
     query = f"{query} LIMIT {page_size} OFFSET {page * page_size};"
+
+    print(query)
 
     dbcontext.execute(query)
 

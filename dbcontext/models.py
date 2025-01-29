@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import Boolean, Column, Integer, String, TypeDecorator
 from dbcontext.mydbconnector import Base
 
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
-from dbcontext.review_repository import get_reviews, update_review_is_hidden, update_review_is_reviewed, update_review
+from dbcontext.review_repository import get_reviews, update_review_is_hidden, update_review_is_reviewed, update_review, get_review
 from fastapi.middleware.cors import CORSMiddleware
 from services.dbconnector import token
 from sqlalchemy.orm import Session
@@ -29,14 +29,14 @@ class ReviewSearchModel(BaseModel):
     page_size: int
 
 class ReviewUpdateModel(BaseModel):
-    review_id: int
+    # review_id: int
     company_name: str
     salary: str
     position: str
     year: str
     other: str
-    hash: str
-    json_raw_data: str
+    # hash: str
+    # json_raw_data: str
 
 @app.post("/search")
 async def search_reviews(model: ReviewSearchModel, key : str = None):
@@ -44,8 +44,9 @@ async def search_reviews(model: ReviewSearchModel, key : str = None):
     return get_reviews(db, model.search_text, model.page, model.page_size, key != token)
 
 @app.get("/reviews/{review_id}")
-async def get_review(review_id: int):
-    return {"review_id": review_id}    
+async def get_review_once(review_id: int, key: str = None):
+    db: Session = SessionLocal()
+    return get_review(db, review_id) 
 
 @app.put("/reviews/{review_id}/is_hidden/{is_hidden}")
 async def update_review_is_hidden(review_id: int, is_hidden: bool, key: str, response : Response):
@@ -67,10 +68,11 @@ async def update_review_is_reviewed(review_id: int, is_reviewed: bool, key: str,
     return {"review_id": review_id, "is_reviewed": is_reviewed}
 
 @app.put("/reviews/{review_id}")
-async def update_review(review_id: int, model: ReviewUpdateModel, key: str, response : Response):
+async def update_review_async(review_id: int, model: ReviewUpdateModel, key: str, response : Response):
+    print(review_id, model)
     db: Session = SessionLocal()
     if(key != token):
         response.status_code = 401
         return {"error": "Invalid key"}
-    update_review(db, review_id, model.company_name, model.salary, model.position, model.year, model.other, model.hash, model.json_raw_data)
+    update_review(db, review_id, model.company_name, model.salary, model.position, model.year, model.other)
     return {"review_id": review_id}

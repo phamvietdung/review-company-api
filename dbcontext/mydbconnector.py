@@ -1,19 +1,28 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 from urllib.parse import quote_plus
 
+dotenv_path = find_dotenv()
+print(f"Loading .env file from: {dotenv_path}")
 
-load_dotenv()
+print("DATABASE_URL:", os.getenv("MYSQL_USER"))
+
+print(os.path.dirname(__file__))
+
+# load_dotenv()
+
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 # Cấu hình URL của MySQL
 # DATABASE_URL = os.getenv("DATABASE_URL")
 password = quote_plus(os.getenv("MYSQL_PASSWORD"))
 DATABASE_URL = f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{password}@{os.getenv('MYSQL_HOST')}/{os.getenv('MYSQL_DATABASE')}"
 
-# print(DATABASE_URL)
+print(DATABASE_URL)
 
 # Khởi tạo engine kết nối
 engine = create_engine(DATABASE_URL, echo=True)
